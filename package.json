@@ -4,7 +4,7 @@
   "description": "Supabase security guardian — audits a Supabase project for the security holes that ship by default when AI builds your app",
   "main": "bin/aegis-sb.js",
   "bin": {
-    "aegis-sb": "./bin/aegis-sb.js"
+    "aegis-sb": "bin/aegis-sb.js"
   },
   "scripts": {
     "start": "node bin/aegis-sb.js"
