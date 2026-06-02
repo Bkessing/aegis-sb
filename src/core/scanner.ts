@@ -2,6 +2,7 @@ import { discoverBuckets, discoverTables } from "./discover.js";
 import { validateLicense } from "./license.js";
 import { probes } from "./probes/index.js";
 import type { Config, Finding, ScanContext, ScanResult } from "./types.js";
+import { buildWordlist } from "./wordlist.js";
 
 /**
  * Run a full scan against a Supabase project.
@@ -19,8 +20,9 @@ export async function runScan(config: Config): Promise<ScanResult> {
 
   const license = await validateLicense(config.licenseKey);
 
+  const candidates = config.tables ?? buildWordlist(config.profiles);
   const [tables, buckets] = await Promise.all([
-    discoverTables(config, config.tables),
+    discoverTables(config, candidates),
     discoverBuckets(config),
   ]);
 

@@ -1,8 +1,10 @@
 import pc from "picocolors";
 import type { Finding, ScanResult, Severity } from "./types.js";
 
+export type OutputFormat = "text" | "json" | "md";
+
 export interface FormatOptions {
-  json?: boolean;
+  format?: OutputFormat;
   color?: boolean;
   quiet?: boolean;
   projectUrl?: string;
@@ -31,10 +33,15 @@ const colorless: Colorizer = {
 };
 
 export function formatFindings(result: ScanResult, options: FormatOptions = {}): string {
-  if (options.json) {
-    return JSON.stringify(result, null, 2);
-  }
+  const format = options.format ?? "text";
 
+  if (format === "json") return JSON.stringify(result, null, 2);
+  if (format === "md") return formatMarkdown(result, options);
+
+  return formatText(result, options);
+}
+
+function formatText(result: ScanResult, options: FormatOptions): string {
   const c: Colorizer = options.color === false ? colorless : pc;
   const lines: string[] = [];
 
@@ -61,11 +68,10 @@ export function formatFindings(result: ScanResult, options: FormatOptions = {}):
   }
 
   for (const f of sorted) {
-    lines.push(formatFinding(f, c));
+    lines.push(formatFindingText(f, c));
     lines.push("");
   }
 
-  // Summary footer
   const counts = countBySeverity(sorted);
   lines.push(c.bold("Summary"));
   if (counts.critical > 0) lines.push(`  ${c.red("✗")} ${counts.critical} critical`);
@@ -76,7 +82,47 @@ export function formatFindings(result: ScanResult, options: FormatOptions = {}):
   return lines.join("\n");
 }
 
-function formatFinding(f: Finding, c: Colorizer): string {
+function formatMarkdown(result: ScanResult, options: FormatOptions): string {
+  const lines: string[] = [];
+
+  lines.push("## aegis-sb scan");
+  if (options.projectUrl) {
+    lines.push("");
+    lines.push(`\`${options.projectUrl}\``);
+  }
+  lines.push("");
+  lines.push(
+    `${result.tablesDiscovered} table${result.tablesDiscovered === 1 ? "" : "s"} · ` +
+      `${result.bucketsDiscovered} bucket${result.bucketsDiscovered === 1 ? "" : "s"} · ` +
+      `${result.durationMs}ms`,
+  );
+  lines.push("");
+
+  const sorted = [...result.findings].sort(compareSeverity);
+
+  if (sorted.length === 0) {
+    lines.push("✅ **No findings.**");
+    lines.push("");
+    return lines.join("\n");
+  }
+
+  const counts = countBySeverity(sorted);
+  const summaryParts: string[] = [];
+  if (counts.critical > 0) summaryParts.push(`🚨 **${counts.critical} critical**`);
+  if (counts.warn > 0) summaryParts.push(`⚠️ ${counts.warn} warning`);
+  if (counts.info > 0) summaryParts.push(`ℹ️ ${counts.info} info`);
+  lines.push(summaryParts.join(" · "));
+  lines.push("");
+
+  for (const f of sorted) {
+    lines.push(formatFindingMarkdown(f));
+    lines.push("");
+  }
+
+  return lines.join("\n");
+}
+
+function formatFindingText(f: Finding, c: Colorizer): string {
   const badge =
     f.severity === "critical"
       ? c.red("CRITICAL")
@@ -99,6 +145,33 @@ function formatFinding(f: Finding, c: Colorizer): string {
   if (f.reference) {
     lines.push("");
     lines.push(`         ${c.dim("Reference:")} ${c.underline(f.reference)}`);
+  }
+
+  return lines.join("\n");
+}
+
+function formatFindingMarkdown(f: Finding): string {
+  const icon = f.severity === "critical" ? "🚨" : f.severity === "warn" ? "⚠️" : "ℹ️";
+  const sevLabel =
+    f.severity === "critical" ? "**CRITICAL**" : f.severity === "warn" ? "**WARN**" : "_INFO_";
+
+  const lines: string[] = [];
+  lines.push(`### ${icon} ${sevLabel} · ${f.title}`);
+  lines.push("");
+  lines.push(f.description);
+
+  if (f.fixPrompt) {
+    lines.push("");
+    lines.push("**Paste into your AI agent to fix:**");
+    lines.push("");
+    lines.push("```text");
+    lines.push(f.fixPrompt);
+    lines.push("```");
+  }
+
+  if (f.reference) {
+    lines.push("");
+    lines.push(`Reference: <${f.reference}>`);
   }
 
   return lines.join("\n");

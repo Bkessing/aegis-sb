@@ -1,6 +1,7 @@
 import type { ProbeRegistration } from "../types.js";
 import { probeAnonRead } from "./anon-read.js";
 import { probeAnonWrite } from "./anon-write.js";
+import { probeAuthPosture } from "./auth-posture.js";
 import { probeJwtRole } from "./jwt-role.js";
 import { probePublicBuckets } from "./public-buckets.js";
 
@@ -39,5 +40,12 @@ export const probes: ProbeRegistration[] = [
     description: "Flags storage buckets configured as public.",
     requires: "free",
     run: probePublicBuckets,
+  },
+  {
+    id: "auth-posture",
+    title: "Auth posture",
+    description: "Detects open anonymous signups combined with a common policy mistake.",
+    requires: "free",
+    run: probeAuthPosture,
   },
 ];

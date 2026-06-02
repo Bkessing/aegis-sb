@@ -39,6 +39,12 @@ export interface Config {
    * Use when your project has non-standard table names.
    */
   tables?: string[];
+  /**
+   * Add tool-specific table-name presets to the default wordlist.
+   * Available: "lovable", "bolt", "v0", "replit", "cursor".
+   * Ignored when `tables` is supplied (since that's a full override).
+   */
+  profiles?: string[];
   /** Suppress non-error output (CLI / scripting use). */
   quiet?: boolean;
 }

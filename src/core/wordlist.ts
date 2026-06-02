@@ -1,10 +1,11 @@
 /**
  * Default wordlist of common table names for vibe-coded Supabase apps.
  *
- * Used when the caller doesn't supply `--tables` explicitly. Supabase locks
- * the OpenAPI spec endpoint to the service_role key (as of mid-2026), so we
- * cannot enumerate tables with the anon key. This wordlist covers the
- * tables that AI codegen tools (Cursor, Lovable, Bolt) generate by default.
+ * Used when the caller doesn't supply `--tables` or `--profile` explicitly.
+ * Supabase locks the OpenAPI spec endpoint to the service_role key (as of
+ * mid-2026), so we cannot enumerate tables with the anon key. This wordlist
+ * covers the tables AI codegen tools (Cursor, Lovable, Bolt) generate by
+ * default.
  *
  * Order: most-common first (slight latency win when we early-out on
  * concurrent batches).
@@ -130,3 +131,90 @@ export const DEFAULT_TABLE_WORDLIST: string[] = [
   "favorites",
   "bookmarks",
 ];
+
+/**
+ * Profile-specific table-name additions.
+ *
+ * Each profile bundles table names that tool-specific scaffolds (Lovable,
+ * Bolt, v0, Replit AI, Cursor) generate at higher-than-baseline rates,
+ * usually because the tool's template gallery or starter prompt nudges
+ * users into similar schema shapes.
+ *
+ * Use via `--profile lovable` (CLI) or `tables` argument on the MCP tool.
+ * Multiple profiles can be passed comma-separated: `--profile lovable,bolt`.
+ * Profile names are case-insensitive.
+ */
+export const PROFILES: Record<string, string[]> = {
+  lovable: [
+    // Lovable's template gallery leans toward CRM / marketing / kanban shapes
+    "leads",
+    "deals",
+    "contacts",
+    "customers_data",
+    "kanban_cards",
+    "kanban_columns",
+    "pipelines",
+    "stages",
+    "milestones",
+    "integrations",
+    "webhooks",
+    "mailing_lists",
+    "subscribers",
+    "campaigns",
+    "outreach",
+  ],
+  bolt: [
+    // Bolt's StackBlitz-rooted templates skew toward simple SaaS demos
+    "ideas",
+    "prompts",
+    "generations",
+    "outputs",
+    "snippets",
+    "rooms",
+    "channels",
+    "voice_notes",
+    "embeddings",
+    "vectors",
+  ],
+  v0: [
+    // v0 leans toward shadcn-style component demos backed by Supabase
+    "components",
+    "blocks",
+    "patterns",
+    "shadcn_demos",
+    "ui_states",
+  ],
+  replit: [
+    // Replit AI Agent generates Repl-style projects — often game/utility shapes
+    "scores",
+    "leaderboards",
+    "games",
+    "rooms",
+    "matches",
+    "tutorials",
+  ],
+  cursor: [
+    // Cursor users vary widely; preset is small + only covers high-frequency
+    // shapes seen in posted-to-X Cursor builds (most Cursor users won't need
+    // this preset — defaults cover them).
+    "embeddings",
+    "rag_documents",
+    "memories",
+  ],
+};
+
+/**
+ * Build the effective table list for a scan from the default wordlist
+ * plus any selected profiles. Duplicates are removed.
+ */
+export function buildWordlist(profileNames: string[] = []): string[] {
+  const set = new Set<string>(DEFAULT_TABLE_WORDLIST);
+  for (const rawName of profileNames) {
+    const name = rawName.toLowerCase().trim();
+    const extras = PROFILES[name];
+    if (extras) {
+      for (const t of extras) set.add(t);
+    }
+  }
+  return Array.from(set);
+}

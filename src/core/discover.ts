@@ -1,6 +1,8 @@
 import { request, runWithConcurrency } from "./http.js";
 import type { Bucket, Config, Table } from "./types.js";
-import { DEFAULT_TABLE_WORDLIST } from "./wordlist.js";
+import { buildWordlist, DEFAULT_TABLE_WORDLIST } from "./wordlist.js";
+
+export { DEFAULT_TABLE_WORDLIST };
 
 /**
  * Discover which tables in the project exist + are exposed to PostgREST.

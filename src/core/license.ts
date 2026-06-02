@@ -19,6 +19,7 @@ export async function validateLicense(_licenseKey?: string): Promise<License> {
       "scan_anon_write",
       "scan_public_buckets",
       "scan_jwt_role",
+      "scan_auth_posture",
     ],
     expiresAt: null,
     valid: true,

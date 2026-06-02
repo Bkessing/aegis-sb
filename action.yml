@@ -1,0 +1,152 @@
+name: "aegis-sb"
+description: "Audit a Supabase project for security holes that ship by default when AI builds your app. Posts findings as a PR comment or workflow summary."
+author: "Brandon Kessinger (@KessingerBuilds)"
+branding:
+  icon: "shield"
+  color: "yellow"
+
+inputs:
+  url:
+    description: "Supabase project URL (e.g. https://abc123.supabase.co)."
+    required: true
+  anon-key:
+    description: "Supabase anonymous JWT key. NEVER pass the service_role key. Use a GitHub secret."
+    required: true
+  tables:
+    description: "Optional: comma-separated list of table names. Overrides the built-in wordlist."
+    required: false
+  profile:
+    description: "Optional: tool preset(s) — comma-separated subset of lovable, bolt, v0, replit, cursor."
+    required: false
+  fail-on:
+    description: "Severity threshold that fails the workflow. One of: critical, warn, none. Default: critical."
+    required: false
+    default: "critical"
+  comment-on-pr:
+    description: "Post findings as a sticky PR comment when triggered by a pull_request event. Default: true."
+    required: false
+    default: "true"
+  version:
+    description: "Pin a specific aegis-sb version (defaults to latest)."
+    required: false
+    default: "latest"
+
+outputs:
+  critical-count:
+    description: "Number of critical findings in the scan result."
+    value: ${{ steps.scan.outputs.critical-count }}
+  warn-count:
+    description: "Number of warn findings."
+    value: ${{ steps.scan.outputs.warn-count }}
+  findings-file:
+    description: "Path to the markdown findings file written by the scan."
+    value: ${{ steps.scan.outputs.findings-file }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: "20"
+
+    - name: Run aegis-sb scan
+      id: scan
+      shell: bash
+      env:
+        AEGIS_URL: ${{ inputs.url }}
+        AEGIS_KEY: ${{ inputs.anon-key }}
+        AEGIS_TABLES: ${{ inputs.tables }}
+        AEGIS_PROFILE: ${{ inputs.profile }}
+        AEGIS_VERSION: ${{ inputs.version }}
+        AEGIS_FAIL_ON: ${{ inputs.fail-on }}
+      run: |
+        set -euo pipefail
+
+        FINDINGS_MD="$RUNNER_TEMP/aegis-sb-findings.md"
+        FINDINGS_JSON="$RUNNER_TEMP/aegis-sb-findings.json"
+
+        ARGS=( "$AEGIS_URL" --key "$AEGIS_KEY" --no-fail )
+        if [[ -n "$AEGIS_TABLES" ]]; then
+          ARGS+=( --tables "$AEGIS_TABLES" )
+        fi
+        if [[ -n "$AEGIS_PROFILE" ]]; then
+          ARGS+=( --profile "$AEGIS_PROFILE" )
+        fi
+
+        echo "::group::aegis-sb (markdown)"
+        npx -y "aegis-sb@${AEGIS_VERSION}" "${ARGS[@]}" --md   > "$FINDINGS_MD"
+        cat "$FINDINGS_MD"
+        echo "::endgroup::"
+
+        echo "::group::aegis-sb (json)"
+        npx -y "aegis-sb@${AEGIS_VERSION}" "${ARGS[@]}" --json > "$FINDINGS_JSON"
+        cat "$FINDINGS_JSON"
+        echo "::endgroup::"
+
+        CRITICAL=$(jq '[.findings[] | select(.severity == "critical")] | length' "$FINDINGS_JSON")
+        WARN=$(jq '[.findings[] | select(.severity == "warn")] | length' "$FINDINGS_JSON")
+
+        {
+          echo "critical-count=$CRITICAL"
+          echo "warn-count=$WARN"
+          echo "findings-file=$FINDINGS_MD"
+        } >> "$GITHUB_OUTPUT"
+
+        cat "$FINDINGS_MD" >> "$GITHUB_STEP_SUMMARY"
+
+        case "$AEGIS_FAIL_ON" in
+          critical)
+            if [[ "$CRITICAL" -gt 0 ]]; then
+              echo "::error::aegis-sb found $CRITICAL critical finding(s). Failing workflow."
+              exit 1
+            fi
+            ;;
+          warn)
+            if [[ "$CRITICAL" -gt 0 ]] || [[ "$WARN" -gt 0 ]]; then
+              echo "::error::aegis-sb found $CRITICAL critical and $WARN warn finding(s). Failing workflow."
+              exit 1
+            fi
+            ;;
+          none) : ;;
+          *) echo "::warning::Unknown fail-on value '$AEGIS_FAIL_ON' — defaulting to critical."
+             if [[ "$CRITICAL" -gt 0 ]]; then exit 1; fi
+             ;;
+        esac
+
+    - name: Comment on PR with findings
+      if: ${{ github.event_name == 'pull_request' && inputs.comment-on-pr == 'true' }}
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const findings = fs.readFileSync(process.env.FINDINGS_FILE, 'utf-8');
+
+          const marker = '<!-- aegis-sb-scan-comment -->';
+          const body = `${marker}\n${findings}\n\n_Posted by [aegis-sb](https://github.com/Bkessing/aegis-sb)_`;
+
+          // Find existing aegis-sb comment to update (sticky behavior)
+          const comments = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+          });
+          const existing = comments.data.find((c) => c.body && c.body.includes(marker));
+
+          if (existing) {
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: existing.id,
+              body,
+            });
+          } else {
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });
+          }
+      env:
+        FINDINGS_FILE: ${{ steps.scan.outputs.findings-file }}

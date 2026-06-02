@@ -107,7 +107,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       tables,
     });
 
-    const text = formatFindings(result, { color: false, projectUrl: url });
+    const text = formatFindings(result, {
+      format: "text",
+      color: false,
+      projectUrl: url,
+    });
     const critical = result.findings.filter((f) => f.severity === "critical").length;
 
     return {
