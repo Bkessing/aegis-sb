@@ -31,12 +31,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/brandonkessinger/aegis-sb.git"
+    "url": "git+https://github.com/Bkessing/aegis-sb.git"
   },
   "bugs": {
-    "url": "https://github.com/brandonkessinger/aegis-sb/issues"
+    "url": "https://github.com/Bkessing/aegis-sb/issues"
   },
-  "homepage": "https://github.com/brandonkessinger/aegis-sb#readme",
+  "homepage": "https://github.com/Bkessing/aegis-sb#readme",
   "engines": {
     "node": ">=18"
   }
