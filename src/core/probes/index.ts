@@ -4,6 +4,7 @@ import { probeAnonWrite } from "./anon-write.js";
 import { probeAuthPosture } from "./auth-posture.js";
 import { probeJwtRole } from "./jwt-role.js";
 import { probePublicBuckets } from "./public-buckets.js";
+import { probeStorageListing } from "./storage-listing.js";
 
 /**
  * Registry of all probes available in this version.
@@ -42,9 +43,16 @@ export const probes: ProbeRegistration[] = [
     run: probePublicBuckets,
   },
   {
+    id: "storage-listing",
+    title: "Storage object listing",
+    description: "Flags buckets whose object list is enumerable by the anon role.",
+    requires: "free",
+    run: probeStorageListing,
+  },
+  {
     id: "auth-posture",
     title: "Auth posture",
-    description: "Detects open anonymous signups combined with a common policy mistake.",
+    description: "Detects open anonymous signups.",
     requires: "free",
     run: probeAuthPosture,
   },

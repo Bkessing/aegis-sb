@@ -130,6 +130,66 @@ export const DEFAULT_TABLE_WORDLIST: string[] = [
   "history",
   "favorites",
   "bookmarks",
+
+  // Encryption / secrets / sharing (calibration gap from 2026-06-02 sample)
+  "secrets",
+  "snippets",
+  "vaults",
+  "shares",
+  "links",
+  "tokens_log",
+  "secure_messages",
+  "encrypted_files",
+
+  // Chat / messaging (multiplayer + ephemeral apps)
+  "rooms",
+  "room_members",
+  "participants",
+  "recipients",
+  "attachments",
+  "channels",
+
+  // Games / leaderboards
+  "matches",
+  "games",
+  "rounds",
+  "players",
+  "scores",
+  "leaderboard",
+  "leaderboards",
+
+  // Tracking / analytics / referrals
+  "clicks",
+  "visits",
+  "views",
+  "impressions",
+  "referrals",
+  "submissions",
+  "responses",
+
+  // E-commerce expansion
+  "inventory",
+  "variants",
+  "shipments",
+  "addresses",
+  "wishlists",
+
+  // Forms / surveys
+  "forms",
+  "survey_responses",
+  "survey_questions",
+
+  // Travel / location (saw wanderscout-shape apps)
+  "trips",
+  "places",
+  "locations",
+  "itineraries",
+
+  // CRM-shape (saw justhunt / tymora-shape apps)
+  "submissions_log",
+  "applications",
+  "appointments",
+  "calls",
 ];
 
 /**

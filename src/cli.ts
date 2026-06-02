@@ -13,6 +13,7 @@ interface CliArgs {
   licenseKey?: string;
   tables?: string[];
   profiles?: string[];
+  readOnly?: boolean;
   json?: boolean;
   md?: boolean;
   noColor?: boolean;
@@ -32,6 +33,7 @@ function parseArgs(argv: string[]): CliArgs {
     else if (arg === "--md" || arg === "--markdown") args.md = true;
     else if (arg === "--no-color") args.noColor = true;
     else if (arg === "--no-fail") args.noFail = true;
+    else if (arg === "--read-only") args.readOnly = true;
     else if (arg === "--quiet") args.quiet = true;
     else if (arg === "--key" || arg === "--anon-key") args.key = argv[++i];
     else if (arg === "--license-key") args.licenseKey = argv[++i];
@@ -76,6 +78,9 @@ Options:
   --profile <names>     Add tool-specific table-name presets to the wordlist.
                         Available: lovable, bolt, v0, replit, cursor.
                         Combinable: --profile lovable,bolt
+  --read-only           Skip probes that send writes (anon-write, auth-posture).
+                        Use when scanning a project you don't own — avoids
+                        creating noise in their logs and analytics.
   --json                Machine-readable JSON output
   --md, --markdown      Markdown output (use for PR comments / CI artifacts)
   --no-color            Disable ANSI colors
@@ -134,12 +139,17 @@ async function handleFrontendSubcommand(argv: string[]): Promise<void> {
     process.stdout.write(
       "aegis-sb frontend — extract Supabase credentials from a deployed app\n\n" +
         "Usage:\n" +
-        "  npx aegis-sb frontend <deployed-url> [--json | --md]\n\n" +
+        "  npx aegis-sb frontend <deployed-url> [--json | --md] [--with-writes]\n\n" +
         "Examples:\n" +
         "  npx aegis-sb frontend https://my-app.lovable.app\n" +
         "  npx aegis-sb frontend https://my-app.vercel.app --md\n\n" +
         "Fetches the deployed page + linked JS bundles, extracts any Supabase URL and JWT\n" +
         "shipped to every visitor, then runs the standard scan against the discovered project.\n" +
+        "\n" +
+        "Frontend mode defaults to read-only (no anon-write / signup probes) since you're\n" +
+        "scanning someone else's project. Pass --with-writes if you own it and want the\n" +
+        "full probe set.\n" +
+        "\n" +
         "If the extracted JWT has `role: service_role`, that is a CRITICAL finding by itself.\n",
     );
     return;
@@ -173,11 +183,14 @@ async function handleFrontendSubcommand(argv: string[]): Promise<void> {
       "\nRunning the standard scan against the discovered project...\n",
   );
 
-  // Hand off to the normal scanner; the jwt-role probe will flag service_role
-  // automatically (and very loudly) if that's what got extracted.
+  // Hand off to the normal scanner. Frontend mode defaults to read-only —
+  // the user just gave us a third-party URL, we don't want to attempt
+  // writes against their database without an explicit override.
+  const writeRequested = argv.includes("--with-writes");
   const result = await runScan({
     url: discovery.supabaseUrl,
     anonKey: discovery.anonKey,
+    readOnly: !writeRequested,
   });
 
   const format = wantJson ? "json" : wantMd ? "md" : "text";
@@ -269,6 +282,7 @@ async function main(): Promise<void> {
       licenseKey: args.licenseKey,
       tables: args.tables,
       profiles: args.profiles,
+      readOnly: args.readOnly,
       quiet: args.quiet,
     });
 

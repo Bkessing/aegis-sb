@@ -29,11 +29,17 @@ export async function runScan(config: Config): Promise<ScanResult> {
   const ctx: ScanContext = { config, license, tables, buckets };
   const findings: Finding[] = [];
 
+  const writeProbeIds = new Set(["anon-write", "auth-posture"]);
+
   for (const probe of probes) {
     const featureKey = `scan_${probe.id.replace(/-/g, "_")}`;
     if (!license.features.includes(featureKey)) {
-      // License tier doesn't allow this probe — skip silently in v0.1.
-      // In v0.4+ this is where paid probes get gated.
+      // License tier doesn't allow this probe — skip silently.
+      continue;
+    }
+
+    if (config.readOnly && writeProbeIds.has(probe.id)) {
+      // Read-only mode: skip probes that send writes to the target.
       continue;
     }
 

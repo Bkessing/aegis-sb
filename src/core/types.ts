@@ -45,6 +45,12 @@ export interface Config {
    * Ignored when `tables` is supplied (since that's a full override).
    */
   profiles?: string[];
+  /**
+   * Read-only mode: skip probes that send write requests (anon-write,
+   * auth-posture signup POST). Use when scanning third-party apps you
+   * don't own — avoids creating noise in their logs / analytics.
+   */
+  readOnly?: boolean;
   /** Suppress non-error output (CLI / scripting use). */
   quiet?: boolean;
 }
