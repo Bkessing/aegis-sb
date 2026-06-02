@@ -1,16 +1,31 @@
 {
   "name": "aegis-sb",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Supabase security guardian — audits a Supabase project for the security holes that ship by default when AI builds your app",
-  "main": "bin/aegis-sb.js",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "bin": {
-    "aegis-sb": "bin/aegis-sb.js"
+    "aegis-sb": "dist/cli.js",
+    "aegis-sb-mcp": "dist/mcp.js"
   },
   "scripts": {
-    "start": "node bin/aegis-sb.js"
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepublishOnly": "npm run build",
+    "start": "node dist/cli.js"
   },
   "files": [
-    "bin",
+    "dist",
+    "skill",
     "README.md",
     "LICENSE"
   ],
@@ -25,7 +40,8 @@
     "lovable",
     "bolt",
     "cursor",
-    "claude-code"
+    "claude-code",
+    "mcp"
   ],
   "author": "Brandon Kessinger <Brandon@CardHabitApp.com> (https://x.com/KessingerBuilds)",
   "license": "MIT",
@@ -39,5 +55,15 @@
   "homepage": "https://github.com/Bkessing/aegis-sb#readme",
   "engines": {
     "node": ">=18"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "picocolors": "^1.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsup": "^8.3.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
   }
 }
