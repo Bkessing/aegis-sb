@@ -14,7 +14,7 @@ When AI tools (Cursor, Lovable, Bolt, Replit AI) generate a Supabase backend, th
 - Storage buckets configured public
 - Wrong-key mistakes (the dev pastes `service_role` thinking it's `anon`)
 
-[Symbiotic Security found 98% of vibe-coded Supabase apps had at least one critical hole.](https://www.symbioticsec.ai/blog/we-scanned-1-072-vibe-coded-apps-98-had-security-flaws)
+[Symbiotic Security's January 2026 study](https://www.symbioticsec.ai/blog/vibe-coding-is-not-secured-by-default-what-a-new-study-tells-us-about-ai-generated-code) found only 10.5% of AI-generated code passes both functional and security tests — 8 out of 10 "working" patches ship with vulnerabilities. Their separate [Lovable scan](https://www.symbioticsec.ai/blog/lovable-vulnerability-scanner) found the same pattern in deployed apps.
 
 aegis-sb catches the canonical patterns and feeds your AI agent paste-ready fix prompts.
 
