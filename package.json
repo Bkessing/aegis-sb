@@ -1,6 +1,6 @@
 {
   "name": "aegis-sb",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Supabase security guardian — audits a Supabase project for the security holes that ship by default when AI builds your app",
   "type": "module",
   "main": "./dist/index.js",

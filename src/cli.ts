@@ -3,6 +3,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { formatFindings } from "./core/format.js";
 import { runScan } from "./core/scanner.js";
+import { installSkill, uninstallSkill } from "./skill-installer.js";
 
 interface CliArgs {
   url?: string;
@@ -49,6 +50,10 @@ Usage:
 Arguments:
   <project-url>         Supabase project URL (or env: SUPABASE_URL)
 
+Subcommands:
+  skill install         Install the Claude Code skill to ~/.claude/skills/
+  skill uninstall       Remove the Claude Code skill
+
 Options:
   --key <anon-key>      Anon key (or env: SUPABASE_ANON_KEY)
   --license-key <key>   License key (reserved for v0.4+ paid features)
@@ -88,8 +93,33 @@ function getVersion(): string {
   }
 }
 
+async function handleSkillSubcommand(argv: string[]): Promise<void> {
+  const action = argv[0];
+  if (action === "install") {
+    await installSkill();
+    return;
+  }
+  if (action === "uninstall") {
+    await uninstallSkill();
+    return;
+  }
+  process.stdout.write(
+    "aegis-sb skill — manage the Claude Code skill\n\n" +
+      "Usage:\n" +
+      "  npx aegis-sb skill install     Install skill to ~/.claude/skills/aegis-sb\n" +
+      "  npx aegis-sb skill uninstall   Remove the skill\n",
+  );
+}
+
 async function main(): Promise<void> {
-  const args = parseArgs(process.argv.slice(2));
+  const argv = process.argv.slice(2);
+
+  if (argv[0] === "skill") {
+    await handleSkillSubcommand(argv.slice(1));
+    return;
+  }
+
+  const args = parseArgs(argv);
 
   if (args.help) {
     console.log(helpText());
