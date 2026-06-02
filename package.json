@@ -1,0 +1,43 @@
+{
+  "name": "aegis-sb",
+  "version": "0.0.1",
+  "description": "Supabase security guardian — audits a Supabase project for the security holes that ship by default when AI builds your app",
+  "main": "bin/aegis-sb.js",
+  "bin": {
+    "aegis-sb": "./bin/aegis-sb.js"
+  },
+  "scripts": {
+    "start": "node bin/aegis-sb.js"
+  },
+  "files": [
+    "bin",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "supabase",
+    "security",
+    "rls",
+    "row-level-security",
+    "audit",
+    "scanner",
+    "vibe-coding",
+    "lovable",
+    "bolt",
+    "cursor",
+    "claude-code"
+  ],
+  "author": "Brandon Kessinger <Brandon@CardHabitApp.com> (https://x.com/KessingerBuilds)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/brandonkessinger/aegis-sb.git"
+  },
+  "bugs": {
+    "url": "https://github.com/brandonkessinger/aegis-sb/issues"
+  },
+  "homepage": "https://github.com/brandonkessinger/aegis-sb#readme",
+  "engines": {
+    "node": ">=18"
+  }
+}
